@@ -1,56 +1,35 @@
-import java.io.IOException;
-
+// File: Main.java
+import java.util.List;
+import java.util.Scanner;
+import java.io.*;
 /**
- * Main class for the Tree Sorting application
  * Student ID: [Your Student ID]
  * Name: [Your Name]
  */
 public class Main {
-    
     public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        System.out.print("Enter the input file name (e.g., input.txt): ");
+        String filename = scanner.nextLine().trim();
+
         try {
-            // Example 1: Small test case from the coursework description
-            System.out.println("=== EXAMPLE 1: Small Test Case ===");
-            String testInput = "1 3 2 7 5 6 4";
-            TreeState initialState = InputParser.parseFromString(testInput);
-            
-            System.out.println("Initial tree: " + initialState);
-            System.out.println("Is BST: " + initialState.isBST());
-            
-            TreeSorter.SearchResult result = TreeSorter.findMinimumSwaps(initialState);
-            TreeSorter.printSolution(result);
-            
-            System.out.println("\n" + "=".repeat(50) + "\n");
-            
-            // Example 2: Another test case
-            System.out.println("=== EXAMPLE 2: Another Test Case ===");
-            String testInput2 = "4 2 6 1 3 5 7";
-            TreeState initialState2 = InputParser.parseFromString(testInput2);
-            
-            System.out.println("Initial tree: " + initialState2);
-            System.out.println("Is BST: " + initialState2.isBST());
-            
-            TreeSorter.SearchResult result2 = TreeSorter.findMinimumSwaps(initialState2);
-            TreeSorter.printSolution(result2);
-            
-            // Example 3: Reading from file (if file exists)
-            if (args.length > 0) {
-                System.out.println("\n" + "=".repeat(50) + "\n");
-                System.out.println("=== READING FROM FILE: " + args[0] + " ===");
-                
-                TreeState fileState = InputParser.parseFromFile(args[0]);
-                System.out.println("Tree from file: " + fileState);
-                System.out.println("Is BST: " + fileState.isBST());
-                
-                TreeSorter.SearchResult fileResult = TreeSorter.findMinimumSwaps(fileState);
-                TreeSorter.printSolution(fileResult);
+            BinaryTree tree = TreeParser.parse(filename);
+            List<String> swaps = TreeSorter.findShortestPath(tree);
+
+            System.out.println("Solution found with " + swaps.size() + " swaps:");
+            if (swaps.isEmpty()) {
+                System.out.println("No swaps needed or no solution found.");
+            } else {
+                for (String swap : swaps) {
+                    System.out.println(swap);
+                }
             }
-            
         } catch (IOException e) {
-            System.err.println("Error reading file: " + e.getMessage());
-        } catch (Exception e) {
-            System.err.println("Error: " + e.getMessage());
-            e.printStackTrace();
+            System.err.println("Error reading input file: " + e.getMessage());
+        } catch (IllegalArgumentException e) {
+            System.err.println("Invalid input: " + e.getMessage());
+        } finally {
+            scanner.close();
         }
     }
 }
