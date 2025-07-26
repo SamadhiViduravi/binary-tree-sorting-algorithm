@@ -14,8 +14,8 @@ public class BinaryTree {
         this.size = other.size;
     }
 
-    public int[] getTree() {
-        return tree;
+    public int[] getArray() {
+        return tree.clone();
     }
 
     public int getSize() {
@@ -30,36 +30,27 @@ public class BinaryTree {
         tree[index] = value;
     }
 
-    // Swap a node with its parent
-    public BinaryTree swap(int childIndex) {
-        if (childIndex == 0) return null; // Can't swap root
-
-        BinaryTree newTree = new BinaryTree(this);
-        int parentIndex = (childIndex - 1) / 2;
-
-        int temp = newTree.tree[childIndex];
-        newTree.tree[childIndex] = newTree.tree[parentIndex];
-        newTree.tree[parentIndex] = temp;
-
-        return newTree;
+    public void swap(int index1, int index2) {
+        int temp = tree[index1];
+        tree[index1] = tree[index2];
+        tree[index2] = temp;
     }
 
-    // Get all possible next states (all valid swaps)
-    public List<BinaryTree> getNextStates() {
-        List<BinaryTree> nextStates = new ArrayList<>();
-
-        // Try swapping each non-root node with its parent
-        for (int i = 1; i < size; i++) {
-            BinaryTree swapped = swap(i);
-            if (swapped != null) {
-                nextStates.add(swapped);
-            }
-        }
-
-        return nextStates;
+    public int getParentIndex(int index) {
+        if (index == 0) return -1;
+        return (index - 1) / 2;
     }
 
-    // Check if this tree is a valid BST
+    public int getLeftChildIndex(int index) {
+        int leftIndex = 2 * index + 1;
+        return leftIndex < size ? leftIndex : -1;
+    }
+
+    public int getRightChildIndex(int index) {
+        int rightIndex = 2 * index + 2;
+        return rightIndex < size ? rightIndex : -1;
+    }
+
     public boolean isBST() {
         return isBSTHelper(0, Integer.MIN_VALUE, Integer.MAX_VALUE);
     }
@@ -70,32 +61,37 @@ public class BinaryTree {
         int value = tree[index];
         if (value <= min || value >= max) return false;
 
-        int leftChild = 2 * index + 1;
-        int rightChild = 2 * index + 2;
+        int leftChild = getLeftChildIndex(index);
+        int rightChild = getRightChildIndex(index);
 
-        return isBSTHelper(leftChild, min, value) &&
-                isBSTHelper(rightChild, value, max);
+        boolean leftValid = leftChild == -1 || isBSTHelper(leftChild, min, value);
+        boolean rightValid = rightChild == -1 || isBSTHelper(rightChild, value, max);
+
+        return leftValid && rightValid;
     }
 
-    // Generate target BST configuration
-    public static BinaryTree generateTargetBST(int[] values) {
-        int[] sorted = values.clone();
-        Arrays.sort(sorted);
-
-        int[] bstArray = new int[values.length];
-        fillBSTArray(bstArray, sorted, 0, 0, sorted.length - 1);
-
-        return new BinaryTree(bstArray);
+    public List<Integer> getPossibleSwaps() {
+        List<Integer> swaps = new ArrayList<>();
+        for (int i = 1; i < size; i++) { // Start from 1 (skip root)
+            swaps.add(i);
+        }
+        return swaps;
     }
 
-    private static void fillBSTArray(int[] bstArray, int[] sorted, int index, int start, int end) {
-        if (start > end || index >= bstArray.length) return;
+    public int calculateHeuristic() {
+        int violations = 0;
+        for (int i = 0; i < size; i++) {
+            int leftChild = getLeftChildIndex(i);
+            int rightChild = getRightChildIndex(i);
 
-        int mid = start + (end - start) / 2;
-        bstArray[index] = sorted[mid];
-
-        fillBSTArray(bstArray, sorted, 2 * index + 1, start, mid - 1);
-        fillBSTArray(bstArray, sorted, 2 * index + 2, mid + 1, end);
+            if (leftChild != -1 && tree[leftChild] >= tree[i]) {
+                violations++;
+            }
+            if (rightChild != -1 && tree[rightChild] <= tree[i]) {
+                violations++;
+            }
+        }
+        return violations;
     }
 
     @Override
@@ -116,17 +112,29 @@ public class BinaryTree {
         return Arrays.toString(tree);
     }
 
-    public String getSwapDescription(BinaryTree parent) {
-        if (parent == null) return "Initial state";
+    public void printTreeStructure() {
+        if (size == 0) return;
 
-        for (int i = 1; i < size; i++) {
-            int parentIndex = (i - 1) / 2;
-            if (this.tree[i] == parent.tree[parentIndex] &&
-                    this.tree[parentIndex] == parent.tree[i]) {
-                return "Swap positions " + parentIndex + " and " + i +
-                        " (values " + this.tree[parentIndex] + " and " + this.tree[i] + ")";
+        int levels = (int) Math.ceil(Math.log(size + 1) / Math.log(2));
+        int maxWidth = (int) Math.pow(2, levels - 1) * 4;
+
+        for (int level = 0; level < levels; level++) {
+            int startIndex = (int) Math.pow(2, level) - 1;
+            int endIndex = Math.min(startIndex + (int) Math.pow(2, level), size);
+
+            int spacing = maxWidth / (int) Math.pow(2, level + 1);
+
+            for (int i = 0; i < spacing; i++) System.out.print(" ");
+
+            for (int i = startIndex; i < endIndex; i++) {
+                if (i < size) {
+                    System.out.print(tree[i]);
+                    if (i < endIndex - 1) {
+                        for (int j = 0; j < spacing * 2; j++) System.out.print(" ");
+                    }
+                }
             }
+            System.out.println();
         }
-        return "Unknown swap";
     }
 }
